@@ -4,7 +4,7 @@
 
 
 void my_thread_func(){
-  std::cout<<"Hello from my thread! "<< a << std::endl;
+  std::cout<<"Hello from my thread! " << std::endl;
 }
 
 int main(){
