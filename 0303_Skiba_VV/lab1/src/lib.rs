@@ -80,9 +80,9 @@ pub fn multiply_matrices((mat1, mat2): (Mat, Mat)) -> Option<Mat> {
 
     for i in 0..rows {
         for j in 0..cols {
-            (0..mat1[0].len()).for_each(|k| {
+            for k in 0..mat1[0].len() {
                 res[i][j] += mat1[i][k] * mat2[k][j];
-            });
+            };
         }
     }
 

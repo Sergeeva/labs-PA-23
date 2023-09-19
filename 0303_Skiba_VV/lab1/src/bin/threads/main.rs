@@ -42,10 +42,10 @@ fn multiply_worker(inp_data: (Mat, Mat)) {
         return;
     };
 
-    println!("Spawning print worker...");
+    println!("Spawning save worker...");
 
     thread::spawn(move || {
-        print_worker(res);
+        save_worker(res);
     })
     .join()
     .unwrap();
@@ -53,8 +53,8 @@ fn multiply_worker(inp_data: (Mat, Mat)) {
     println!("\tMULTIPLY WORKER END");
 }
 
-fn print_worker(mat: Mat) {
-    println!("\tPRINT WORKER START");
+fn save_worker(mat: Mat) {
+    println!("\tSAVE WORKER START");
     start_measure(&WRITE_OUTPUT);
 
     mat.save_to_file("res.txt");
@@ -63,7 +63,7 @@ fn print_worker(mat: Mat) {
     println!(" > Write output to file: Elapsed time: {} ms", elapsed.as_millis());
 
     println!("Result matrix saved to res.txt");
-    println!("\tPRINT WORKER END");
+    println!("\tSAVE WORKER END");
 }
 
 

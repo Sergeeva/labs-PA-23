@@ -52,18 +52,28 @@ fn multiply_worker((mat1, mat2): (Mat, Mat), worker_cnt: usize) {
     let res_cols = mat2[0].len();
     let mut res = vec![vec![0; res_cols]; res_rows];
 
+    // Wrap matrices into Arc - atomic reference counter, 
+    // so we can share them read-only between threads
+
+    // Otherwise, it would be a compile error, because local 
+    // variables lifetime may be shorter than lifetime of spawned thread (possible dangling pointer)
     let mat1 = Arc::new(mat1);
     let mat2 = Arc::new(mat2);
 
     let mat_elem_cnt = res_rows * res_cols;
 
-    let (tx, rx) = channel::<(Range<usize>, Box<[i32]>)>(); // workers will calculate range of matrix and
+    // We use MPSC channel for sending multiplied result back from workers to this thread
+    // rx lives here
+    // tx is cloned and sent to workers
+    let (tx, rx) = channel::<(Range<usize>, Box<[i32]>)>();
                                                    // send it back to main thread
 
+    // how much elements each worker should calculate
     let chunk_size = mat_elem_cnt / worker_cnt;
 
+    // define function for workers
     let calculate_rng = move |rng: Range<usize>, mat1: Arc<Mat>, mat2: Arc<Mat>| -> Box<[i32]> {
-        // here we calculate range of matrix and return it to main thread
+        // here we calculate range of matrix and send it to main thread using channel (see below in thread::spawn)
         let mut chunk: Vec<i32> = Vec::with_capacity(rng.len());
 
         for cursor in rng.clone() {
@@ -94,15 +104,21 @@ fn multiply_worker((mat1, mat2): (Mat, Mat), worker_cnt: usize) {
         let mat2_clone = mat2.clone();
 
         std::thread::spawn(move || {
-            tx_copy.send((rng.clone(), calculate_rng(rng, mat1_clone, mat2_clone))).unwrap();
+            //calculate chunk of res matrix data
+            let calculated_chunk = calculate_rng(rng.clone(), mat1_clone, mat2_clone);
+            //send it to caller thread to update result matrix
+            tx_copy.send((rng, calculated_chunk)).unwrap();
         });
     }
 
-    //drop tx to close channel
+    // drop tx to close sender in this thread, leave only cloned senders in worker threads
+    // so, when all workers finish their work, they gonna drop sender and loop below will finish
+    // Make use of channels allows us to avoid joining all of the workers and possibly improve performance!
     drop(tx);
 
     println!("Collecting results...");
 
+    // Receiving chunks of result matrix from spawned workers...
     while let Ok((rng, chunk)) = rx.recv() {
         print!(".");
         std::io::Write::flush(&mut stdout()).unwrap();
@@ -113,14 +129,14 @@ fn multiply_worker((mat1, mat2): (Mat, Mat), worker_cnt: usize) {
             res[row][col] = chunk[cursor - rng.start];
         }
     }
-    println!("Finished! Launching print worker...");
 
     let elapsed = stop_measure(&MULTIPLY_METRIC);
     println!(" > Multiply matrices: Elapsed time: {} ms", elapsed.as_millis());
 
 
+    println!("Finished! Launching save worker...");
     thread::spawn(move || {
-        print_worker(res);
+        save_worker(res);
     })
     .join()
     .unwrap();
@@ -128,8 +144,8 @@ fn multiply_worker((mat1, mat2): (Mat, Mat), worker_cnt: usize) {
     println!("\tMULTIPLY WORKER END");
 }
 
-fn print_worker(mat: Mat) {
-    println!("\tPRINT WORKER START");
+fn save_worker(mat: Mat) {
+    println!("\tSAVE WORKER START");
     start_measure(&WRITE_OUTPUT);
 
     mat.save_to_file("res.txt");
@@ -138,7 +154,7 @@ fn print_worker(mat: Mat) {
     println!(" > Write output to file: Elapsed time: {} ms", elapsed.as_millis());
 
     println!("Result matrix saved to res.txt");
-    println!("\tPRINT WORKER END");
+    println!("\tSAVE WORKER END");
 }
 
 

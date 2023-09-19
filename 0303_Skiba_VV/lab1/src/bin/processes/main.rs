@@ -51,14 +51,14 @@ fn multiply_worker(inp_data: (Mat, Mat)) {
 
     match fork() {
         Ok(Fork::Parent(child)) => {
-            println!("Print worker with pid {} spawned", child);
+            println!("Save worker with pid {} spawned", child);
 
             println!("Waiting for child...");
             nix::sys::wait::wait().unwrap();
             println!("Wait finished")
         }
         Ok(Fork::Child) => {
-            print_worker(res);
+            save_worker(res);
         }
         Err(_) => println!("Fork failed"),
     }
@@ -66,8 +66,8 @@ fn multiply_worker(inp_data: (Mat, Mat)) {
     println!("\tMULTIPLY WORKER END");
 }
 
-fn print_worker(mat: Mat) {
-    println!("\tPRINT WORKER START");
+fn save_worker(mat: Mat) {
+    println!("\tSAVE WORKER START");
     start_measure(&WRITE_OUTPUT);
     mat.save_to_file("res.txt");
 
@@ -75,8 +75,7 @@ fn print_worker(mat: Mat) {
     println!(" > Write output to file: Elapsed time: {} ms", elapsed.as_millis());
 
     println!("Result matrix saved to res.txt");
-    println!("Print worker finished");
-    println!("\tPRINT WORKER END");
+    println!("\tSAVE WORKER END");
 }
 
 fn main() {
