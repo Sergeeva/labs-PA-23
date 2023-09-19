@@ -29,7 +29,7 @@ pub fn generate_random_matrix(rows: usize, cols: usize) -> Mat {
     let mut rng = rand::thread_rng();
     let mut mat = Vec::new();
 
-    println!("Generation matrix {}x{} with random values 1..10", rows, cols);
+    println!("Filling matrix {}x{} with random values (1..10)...", rows, cols);
 
     for _ in 0..rows {
         let row: Vec<i32> = (0..cols).map(|_| rng.gen_range(1..10)).collect();
@@ -50,6 +50,11 @@ pub fn input_matrices() -> (Mat, Mat) {
         .split_whitespace()
         .map(|s| s.parse().expect("Invalid input"))
         .collect();
+
+    if dimensions.len() != 3 {
+        println!("Invalid input, expected 3 integers separated by whitespace.");
+        std::process::exit(1);
+    }
 
     let rows0 = dimensions[0];
     let cols0 = dimensions[1];
