@@ -48,6 +48,8 @@ float& Matrix::get( size_t i, size_t j )
 
 Matrix operator*( const Matrix& lhs, const Matrix& rhs )
 {
+     assert( lhs.get_cols() );
+     assert( rhs.get_cols() );
      assert( lhs.get_cols() == rhs.get_rows() );
      Matrix result( lhs.get_rows(), rhs.get_cols() );
      for ( size_t i = 0; i < result.get_rows(); i++ )
