@@ -24,6 +24,6 @@ public:
     static void writeResultMatrix( const TaskOut& task );
 }; // class Tasks
 
-}; // namespace threads
+} // namespace threads
 
 #endif // THREADS_TASKS_H
