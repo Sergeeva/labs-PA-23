@@ -34,14 +34,12 @@ public:
         {
             return false;
         }
-        {
-            std::shared_ptr< Node > newTail = std::make_shared< Node >( nullptr, nullptr );
+        std::shared_ptr< Node > newTail = std::make_shared< Node >( nullptr, nullptr );
 
-            std::unique_lock< std::mutex > tailLockGuard{ tailMtx_ };
-            tail_->next = newTail;
-            tail_->value = std::make_shared< T >( std::move( value ) );
-            tail_ = newTail;
-        }
+        std::unique_lock< std::mutex > tailLockGuard{ tailMtx_ };
+        tail_->next = newTail;
+        tail_->value = std::make_shared< T >( std::move( value ) );
+        tail_ = newTail;
         cond_.notify_one();
         return true;
     } // push
@@ -103,20 +101,12 @@ private:
 
     std::shared_ptr< Node > waitPopHead()
     {
-        while ( true )
+        std::unique_lock< std::mutex > headLockGuard( waitData() );
+        if ( canceled_.load( std::memory_order_acquire ) )
         {
-            std::unique_lock< std::mutex > headLockGuard( waitData() );
-            if ( canceled_.load( std::memory_order_acquire ) )
-            {
-                break; // cancelled
-            }
-            if ( getTail() == head_ )
-            {
-                continue; // suspicious unlock
-            }
-            return popHeadData();
+            return nullptr;
         }
-        return nullptr;
+        return popHeadData();
     } // waitPopHead
 
     std::shared_ptr< Node > head_;

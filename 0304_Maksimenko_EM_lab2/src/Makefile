@@ -9,9 +9,9 @@ DEPEXT					:= d
 
 # compiler settings
 CC						:= LANG=en_US g++
-OPTIMIZATION			:= -O0 -g3
-OPTIONS					:= -DFINE_GRAINED_LOCK
-# OPTIONS					:=
+OPTIMIZATION			:= -O3
+# OPTIONS					:= -DFINE_GRAINED_LOCK
+OPTIONS					:=
 CXXFLAGS				:= -Wall -Wextra -Wpedantic $(OPTIONS)
 STANDART				:= -std=c++14
 LIB						:=

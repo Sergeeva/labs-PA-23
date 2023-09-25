@@ -67,11 +67,6 @@ public:
             cond_.wait( lockGuard, [ this ](){
                 return !container_.empty() || canceled_.load( std::memory_order_acquire );
             } );
-            if ( container_.empty() )
-            {
-                /// Случайная разблокировка
-                continue;
-            }
             if ( canceled_.load( std::memory_order_acquire ) )
             {
                 /// Окончание работы
