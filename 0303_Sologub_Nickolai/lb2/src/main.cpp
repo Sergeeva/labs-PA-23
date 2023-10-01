@@ -119,9 +119,6 @@ int main(int argc, char *argv[]){
         for(auto& thread: Producers) {
             thread.join(); // дождаться завершения
         }
-       // std::thread  generate(matricesGenerate<QueueRoughLock>, ref(queueFirst), ref(queueSecond), countIterations, N); // сгенерить матрицы 
-
-        //std::thread multiple(matricesMultiple<QueueRoughLock>, ref(queueFirst), ref(queueSecond), ref(queueResult), countIterations, N, countThreads); // умножаем матрицы
         for (int index = 0; index < countConsumers; index++) {
             
             Consumers[index] = std::thread(matricesMultiple<QueueRoughLock>, ref(queueFirst), ref(queueSecond), ref(queueResult), countIterations,index,countConsumers, N, countThreads,ref(res_matrix)); // создать потоки для суммы
@@ -129,12 +126,6 @@ int main(int argc, char *argv[]){
         for(auto& thread: Consumers) {
             thread.join(); // дождаться завершения
         }
-        
-        //std::thread write(writeResult<QueueRoughLock>, ref(queueResult), countIterations, ref(res_matrix)); // выводим в файл
-    
-        //generate.join();
-        //multiple.join();
-        //write.join(); // ждём завершения потоков
         res_matrix.close();
         std::chrono::duration<double> endTime = std::chrono::steady_clock::now() - startTime; // закончить время подсчёта
         std::cout << "Время работы: " << endTime.count() << " секунд" << std::endl;
@@ -153,20 +144,12 @@ int main(int argc, char *argv[]){
         for(auto& thread: Producers) {
             thread.join(); // дождаться завершения
         }
-     // std::thread  generate(matricesGenerate<QueueThinLock>, ref(queueFirst), ref(queueSecond), countIterations, N); // сгенерить матрицы 
-
-      //std::thread multiple(matricesMultiple<QueueThinLock>, ref(queueFirst),ref(queueSecond), ref(queueResult), countIterations, N, countThreads); // умножаем матрицы
     for (int index = 0; index < countConsumers; index++) {
             Consumers[index] = std::thread(matricesMultiple<QueueThinLock>, ref(queueFirst), ref(queueSecond), ref(queueResult), countIterations,index,countConsumers, N, countThreads,ref(res_matrix)); // создать потоки для суммы
         }
         for(auto& thread: Consumers) {
             thread.join(); // дождаться завершения
         }
-      //std::thread write(writeResult<QueueThinLock>, ref(queueResult), countIterations, ref(res_matrix)); // выводим в файл
-    
-      //generate.join();
-      //multiple.join();
-      //write.join(); // ждём завершения потоков
       res_matrix.close();
       std::chrono::duration<double> endTime = std::chrono::steady_clock::now() - startTime; // закончить время подсчёта
       std::cout << "Время работы: " << endTime.count() << " секунд" << std::endl;
