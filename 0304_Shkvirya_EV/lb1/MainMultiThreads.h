@@ -20,7 +20,7 @@ namespace ForMultiThread {
     }
 }
 
-#define COUNT_THREADS 80
+#define COUNT_THREADS 14
 
 void mainMultiThread() {
     srand(time(nullptr));
@@ -71,5 +71,5 @@ void mainMultiThread() {
 
     auto finishTime = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finishTime - startTime);
-    cout << duration.count();
+    cout << duration.count() << '\n';
 }
