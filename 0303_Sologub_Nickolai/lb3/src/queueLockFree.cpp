@@ -15,11 +15,11 @@ void QueueLockFree::produce(const Matrix& matrix){
             if (curTail == tail.load()) { // если хвост всё ещё не поменялся
                 if (next == nullptr) { // если curTail всё ещё последний узел
                     if (curTail->next.compare_exchange_weak(next, newNode)) { // добавляем узел в очередь
-                        tail.compare_exchange_strong(curTail, newNode); // если хвост не поменялся, то хвост теперь новый элемент 
+                        tail.compare_exchange_weak(curTail, newNode); // если хвост не поменялся, то хвост теперь новый элемент 
                         return;
                     }
                 } else {  // Если другой поток уже поменял хвост
-                    tail.compare_exchange_strong(curTail, next); // обновляем хвост на следующий по очереди т.к. уже не актуален
+                    tail.compare_exchange_weak(curTail, next); // обновляем хвост на следующий по очереди т.к. уже не актуален
                 }
             }
         }
@@ -36,7 +36,7 @@ bool QueueLockFree::consume(Matrix& value){
                         // Очередь пуста
                         return false;
                     }
-                    tail.compare_exchange_strong(curTail, first); // сместить  хвост на head->next
+                    tail.compare_exchange_weak(curTail, first); // сместить  хвост на head->next
                 } else { // голова и хвост указывают на разное
                     if (head.compare_exchange_weak(curHead, first)) { // head теперь head->next
                         value = curHead->data;
