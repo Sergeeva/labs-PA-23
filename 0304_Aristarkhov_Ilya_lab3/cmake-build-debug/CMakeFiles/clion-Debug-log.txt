@@ -1,0 +1,4 @@
+/home/ilya201232/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/ilya201232/.local/share/JetBrains/Toolbox/apps/clion/bin/ninja/linux/x64/ninja -G Ninja -S /home/ilya201232/CLionProjects/labs-PA-23/0304_Aristarkhov_Ilya_lab3 -B /home/ilya201232/CLionProjects/labs-PA-23/0304_Aristarkhov_Ilya_lab3/cmake-build-debug
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/ilya201232/CLionProjects/labs-PA-23/0304_Aristarkhov_Ilya_lab3/cmake-build-debug
