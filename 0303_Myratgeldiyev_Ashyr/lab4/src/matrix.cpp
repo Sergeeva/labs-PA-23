@@ -44,7 +44,7 @@ Matrix::Matrix(const Matrix&& other) {
     this->matrix = move(other.matrix);
 }
 
-Matrix Matrix::operator* (const Matrix& other) {
+Matrix Matrix::operator* (const Matrix& other) const {
     
     Matrix result(this->rows, other.cols, false);
     if (this->rows == other.cols) {
