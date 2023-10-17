@@ -12,7 +12,7 @@ void Create(Matrix& first, Matrix& second,Matrix& result,int N) // создан�
 }
 void StrassenMultiple(Matrix first, Matrix second, Matrix &result, int BigSize){
     int N = first.matrix.size();
-    if (N > 4){ // если размерность больше 2 
+    if (N > BigSize && N > 2){ // если размерность больше 2 
         int half = N / 2;
         // Разбиваем матрицы на четыре подматрицы
         Matrix A11 = Matrix(half,half);
@@ -43,13 +43,13 @@ void StrassenMultiple(Matrix first, Matrix second, Matrix &result, int BigSize){
         Matrix P6(half,half); 
         Matrix P7(half,half);
         // разделяем задачу на 7 умножений
-        std::thread p1_thread(StrassenMultiple, A11 + A22, B11 + B22, std::ref(P1));
-        std::thread p2_thread(StrassenMultiple, A21 + A22, B11, std::ref(P2));
-        std::thread p3_thread(StrassenMultiple, A11, B12 - B22, std::ref(P3));
-        std::thread p4_thread(StrassenMultiple, A22, B21 - B11, std::ref(P4));
-        std::thread p5_thread(StrassenMultiple, A11 + A12, B22, std::ref(P5));
-        std::thread p6_thread(StrassenMultiple, A21 - A11, B11 + B12, std::ref(P6));
-        std::thread p7_thread(StrassenMultiple, A12 - A22, B21 + B22, std::ref(P7));
+        std::thread p1_thread(StrassenMultiple, A11 + A22, B11 + B22, std::ref(P1),BigSize);
+        std::thread p2_thread(StrassenMultiple, A21 + A22, B11, std::ref(P2),BigSize);
+        std::thread p3_thread(StrassenMultiple, A11, B12 - B22, std::ref(P3),BigSize);
+        std::thread p4_thread(StrassenMultiple, A22, B21 - B11, std::ref(P4),BigSize);
+        std::thread p5_thread(StrassenMultiple, A11 + A12, B22, std::ref(P5),BigSize);
+        std::thread p6_thread(StrassenMultiple, A21 - A11, B11 + B12, std::ref(P6),BigSize);
+        std::thread p7_thread(StrassenMultiple, A12 - A22, B21 + B22, std::ref(P7),BigSize);
 
         p1_thread.join();
         p2_thread.join();
@@ -121,8 +121,8 @@ int main(){
             cin >> threadsCount;
             Create(first,second,result,N);
             auto startTime = std::chrono::steady_clock::now(); // засечь время начала
-            cout << first;
-            cout << second;
+            //cout << first;
+           // cout << second;
             std::vector<std::thread> multipleThreads = std::vector<std::thread>(threadsCount); // вектор из P потоков
                 for (int index = 0; index < threadsCount; index++) {
                     multipleThreads[index] = std::thread(MultipleSimple,std::ref(first), std::ref(second),std::ref(result),index,threadsCount); // создать потоки для умножения
@@ -132,7 +132,7 @@ int main(){
                 }
                 std::chrono::duration<double> endTime = std::chrono::steady_clock::now() - startTime; // закончить время подсчёта
                 std::cout << "Время работы: " << endTime.count() << " секунд" << std::endl;
-                cout << result;
+                //cout << result;
                 outPut(result);
                 break;
 	        }
@@ -163,7 +163,8 @@ int main(){
         case 2:{
             cout << "Введите размерность матриц:\n";
             cin >> N;
-            Create(first,second,result,N);
+            int count = 4;
+            Create(first,second,result,N/count);
             auto startTime = std::chrono::steady_clock::now(); // засечь время начала
            // cout << first;
            // cout << second;
