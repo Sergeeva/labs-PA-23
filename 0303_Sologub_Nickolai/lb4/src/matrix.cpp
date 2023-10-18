@@ -89,17 +89,29 @@ void Matrix::multiple(Matrix& second,Matrix& result)
     }
 }
 
+
+
 void Matrix::multipleExtend(Matrix& second,Matrix& result,int startRow,int endRow)
 {
     int rowResult = result.matrix.size(); // количество элементов в столбце финальной матрице
     int columnResult = result.matrix[0].size(); // количество элементов в строке финальной матрицы
+    std::vector<std::vector<long long int>> bt;
     for (int i = startRow; i < endRow; i++) {
         for (int j = 0; j < rowResult; j++) {
+
             result.matrix[i][j] = 0;
             for (int k = 0; k < columnResult; k++) {
-                result.matrix[i][j] += matrix[i][k] * second.matrix[k][j];
+                result.matrix[i][j] += matrix[i][k] * second.matrix[j][k];
             }
         }
+    }
+}
+
+void Matrix::transp(Matrix& mat){
+    for(int i = 0; i< mat.matrix.size();i++){
+        for(int j = 0; j< mat.matrix[0].size();j++){
+        matrix[i][j] = mat.matrix[j][i];
+    }
     }
 }
 

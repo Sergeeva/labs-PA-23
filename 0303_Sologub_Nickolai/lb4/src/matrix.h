@@ -20,6 +20,7 @@ public:
     void fromArray(int* buf,int  N,int M);
     void fileOutput(char* fileName);
     Matrix operator=(Matrix copy);
+    void transp(Matrix& mat);
     friend Matrix operator+(Matrix first,Matrix second);
     friend Matrix operator*(Matrix first,Matrix second);
     friend Matrix operator-(Matrix first,Matrix second);
