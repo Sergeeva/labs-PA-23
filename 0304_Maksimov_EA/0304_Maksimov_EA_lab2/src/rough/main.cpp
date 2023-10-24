@@ -9,13 +9,14 @@
 #include "../model/matrix.h"
 
 // #define DEBUG
+// #define WRITE_MODE
 
 std::queue<Matrix> buffer;
 std::mutex mtx;
 std::condition_variable cv;
-     
+
 void producer(int countIterations) {
-    for (int i = 1; i <= countIterations; i++) {
+    for (int i = 0; i < countIterations; i++) {
         std::lock_guard<std::mutex> lock(mtx);
         #ifdef DEBUG
             std::cout << "Producer start, ";
@@ -29,17 +30,19 @@ void producer(int countIterations) {
 }
 
 void consumer(int countIterations) {
-    for (int i = 1; i <= countIterations; i++) {
+    for (int i = 0; i < countIterations; i++) {
         std::unique_lock<std::mutex> lock(mtx);
         cv.wait(lock, [] { 
-            return !buffer.empty(); 
+            return !buffer.empty();
         });
         #ifdef DEBUG
             std::cout << "Consumer start, ";
         #endif
         Matrix data = buffer.front();
         buffer.pop();
-        writeMatrixToFile(squareMatrix(data));
+        #ifdef WRITE_MODE
+            writeMatrixToFile(squareMatrix(data));
+        #endif
         #ifdef DEBUG
             std::cout << "Consumer leave" << std::endl;
         #endif
@@ -52,7 +55,9 @@ int main() {
         return -1;
     }
 
-    openOutputFile();
+    #ifdef WRITE_MODE
+        openOutputFile();
+    #endif
 
     int countProducers = inputValues[0],
         countConsumers = inputValues[1], 
@@ -72,6 +77,8 @@ int main() {
         threads[i].join();
     }
 
-    closeOutputFile();
+    #ifdef WRITE_MODE
+        closeOutputFile();
+    #endif
     return 0;
 }

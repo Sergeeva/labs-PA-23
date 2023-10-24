@@ -1,47 +1,23 @@
 #include <iostream>
 #include <queue>
 #include <thread>
-#include <mutex>
-#include <condition_variable>
 
-#include "../io/output.h"
 #include "../io/input.h"
 #include "../model/matrix.h"
+#include "ThinQueue.h"
 
-// #define DEBUG
-
-std::queue<Matrix> buffer;
-std::mutex mutexProducer;
-std::mutex mutexConsumer;
+ThinQueue buffer;
 
 void producer(int countIterations) {
-    for (int i = 1; i <= countIterations; i++) {
-        std::lock_guard<std::mutex> lock(mutexProducer);
-        #ifdef DEBUG
-            std::cout << "Producer start, ";
-        #endif
-        buffer.push(generateMatrix());
-        #ifdef DEBUG
-            std::cout << "Producer leave" << std::endl;
-        #endif
+    for (int i = 0; i < countIterations; i++) {
+        buffer.push();
     }
 }
 
 void consumer(int countIterations) {
-    for (int i = 1; i <= countIterations; i++) {
-        std::lock_guard<std::mutex> lock(mutexConsumer);
-        #ifdef DEBUG
-            std::cout << "Consumer start, ";
-        #endif
-        while(buffer.empty()) {
-            continue;
-        }
-        Matrix data = buffer.front();
-        buffer.pop();
-        writeMatrixToFile(squareMatrix(data));
-        #ifdef DEBUG
-            std::cout << "Consumer leave" << std::endl;
-        #endif
+    for (int i = 0; i < countIterations; i++) {
+        Matrix popMatrix = buffer.pop();
+        popMatrix = squareMatrix(popMatrix);
     }
 }
 
@@ -50,8 +26,6 @@ int main() {
     if(inputValues.size() != 3) {
         return -1;
     }
-
-    openOutputFile();
 
     int countProducers = inputValues[0],
         countConsumers = inputValues[1], 
@@ -71,6 +45,5 @@ int main() {
         threads[i].join();
     }
 
-    closeOutputFile();
     return 0;
 }

@@ -5,7 +5,7 @@ BIN_ROUGH = ./bin/main_rough.exe
 BIN_THIN = ./bin/main_thin.exe
 
 CPP_ROUGH = ./rough/main.cpp ./model/matrix.cpp ./io/input.cpp ./io/output.cpp
-CPP_THIN = ./thin/main.cpp ./model/matrix.cpp ./io/input.cpp ./io/output.cpp
+CPP_THIN = ./thin/main.cpp ./model/matrix.cpp ./io/input.cpp ./io/output.cpp ./thin/ThinQueue.cpp
 
 all: make_rough make_thin clean
 
