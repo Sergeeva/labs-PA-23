@@ -19,44 +19,6 @@ ThreadSync in_sync;
 ThreadSync calc_sync;
 ThreadSync out_sync;
 
-
-void task_dot_products( const Matrix& lhs, const Matrix& rhs, Matrix& result, size_t n, size_t count )
-{
-     for ( size_t pos = 0; pos < lhs.get_rows(); pos++ )
-     {
-          for ( size_t i = 0; i < lhs.get_cols(); i++ )
-          {
-               for ( size_t j = 0; j < rhs.get_cols(); j++ )
-               {
-                    if ( ( pos + j ) % count == n )
-                    {
-                         result.get( pos, j ) += lhs.get( pos, i ) * rhs.get( i, j );
-                    }
-               }
-          }
-     }
-}
-
-
-Matrix multiply_matrices_parallel( const Matrix& lhs, const Matrix& rhs, size_t thread_count )
-{
-     Matrix result{ lhs.get_rows(), rhs.get_cols() };
-     thread_count = std::min( thread_count, result.get_rows() );
-     std::vector< std::thread > threads;
-     threads.reserve( thread_count );
-
-     for ( size_t i = 0; i < thread_count; i++ )
-     {
-          threads.emplace_back( task_dot_products, std::cref( lhs ),
-               std::cref( rhs ), std::ref( result ), i, thread_count );
-     }
-     for ( auto& thrd : threads )
-     {
-          thrd.join();
-     }
-     return result;
-}
-
 } // anonymous namespace
 
 
@@ -77,7 +39,7 @@ void calculate( size_t thread_count, const Matrix& lhs, const Matrix& rhs, Matri
 {
      calc_sync.wait();
 
-     result = multiply_matrices_parallel( lhs, rhs, thread_count );
+     result = multiply_matrices_parallel_v1( lhs, rhs, thread_count );
 
      out_sync.notify();
 }

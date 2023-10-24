@@ -1,4 +1,4 @@
-TARGET = lab2
+TARGET = lab4
 LIBS = -pthread
 INCLUDES = . ../common
 SOURCES = main \
