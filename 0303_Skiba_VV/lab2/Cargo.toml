@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.75"
+crossbeam = "0.8.2"
 rand = "0.8.5"
 
 
@@ -14,7 +15,6 @@ rand = "0.8.5"
 
 
 [features]
-default = []
-condvar = []
 fulllock = []
 partiallock = []
+segqueue = []
