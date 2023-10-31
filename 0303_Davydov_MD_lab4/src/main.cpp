@@ -75,7 +75,7 @@ void strassenMultiple(Matrix initA, Matrix initB, Matrix& C, int limit)
         strassenMultiple( A21 - A11, B11 + B12,P6,limit);
         strassenMultiple(A12 - A22, B21 + B22,P7,limit);
     }
-    // вычисляем блоки матрицы результата
+    // вычисляем блоки
     Matrix C11 = P1 + P4;
     C11 = C11 - P5;
     C11 = C11 + P7;
@@ -85,7 +85,7 @@ void strassenMultiple(Matrix initA, Matrix initB, Matrix& C, int limit)
     C22 = C22 - P2;
     C22 = C22 + P3;
     C22 = C22 + P6;
-    // Собираем результат в одну матрицу
+    // Собираем матрицу
     for (int i = 0; i < half; i++) 
     {
         for (int j = 0; j < half; j++) 
@@ -103,7 +103,7 @@ void strassenMultiple(Matrix initA, Matrix initB, Matrix& C, int limit)
     }
 }
 
-void multiple(Matrix& A, Matrix& B, Matrix& C, int shiftRow, int threadCount){ // умножение матриц
+void multiple(Matrix& A, Matrix& B, Matrix& C, int shiftRow, int threadCount){ 
     if(threadCount == 1)
     {
         A.multiple(B, C);
@@ -114,7 +114,7 @@ void multiple(Matrix& A, Matrix& B, Matrix& C, int shiftRow, int threadCount){ /
     }
 }
 
-void multipleExtended(Matrix& A, Matrix& B,Matrix& C,int startRow,int endRow){ // умножение матриц
+void multipleExtended(Matrix& A, Matrix& B,Matrix& C,int startRow,int endRow){ 
 
     A.multipleExtend(B,C,startRow,endRow);
 }
@@ -126,8 +126,8 @@ void outPut(Matrix& C)
 
 int main()
 {
-    int choice = 2;
-    int N = 4;
+    int choice = 3;
+    int N = 16;
     int threadsCount = 7;
     Matrix A;
     Matrix B;
@@ -139,7 +139,7 @@ int main()
         case 0:
         {
             matricesGenerate(A, B, C, N);
-            std::vector<std::thread> multipleThreads = std::vector<std::thread>(threadsCount); // вектор из P потоков
+            std::vector<std::thread> multipleThreads = std::vector<std::thread>(threadsCount); 
             for (int index = 0; index < threadsCount; index++) 
             {
                 multipleThreads[index] = std::thread(multiple,
@@ -147,11 +147,11 @@ int main()
                                         std::ref(B),
                                         std::ref(C),
                                         index,
-                                        threadsCount); // создать потоки для умножения
+                                        threadsCount);
             }
             for(auto& thread: multipleThreads) 
             {
-                thread.join(); // дождаться завершения
+                thread.join(); 
             }
             outPut(C);
             break;
@@ -162,21 +162,21 @@ int main()
             B = Matrix(N,N);
             B.transp(cur);
             
-            std::vector<std::thread> multipleThreads = std::vector<std::thread>(threadsCount); // вектор из P потоков
+            std::vector<std::thread> multipleThreads = std::vector<std::thread>(threadsCount); 
             for (int index = 0; index < threadsCount; index++)
             {    
                 int startRow = index * (N / threadsCount);
-                int endRow = (index == threadsCount - 1) ? N : (index + 1) * (N / threadsCount); // выделить каждому потоку start - end + 1 строк
+                int endRow = (index == threadsCount - 1) ? N : (index + 1) * (N / threadsCount); // потоку start - end + 1 строк
                 multipleThreads[index] = std::thread(multipleExtended,
                                         std::ref(A), 
                                         std::ref(B),
                                         std::ref(C),
                                         startRow,
-                                        endRow); // создать потоки для умножения
+                                        endRow);
             }
             for(auto& thread: multipleThreads) 
             {
-                thread.join(); // дождаться завершения
+                thread.join(); 
             }
             outPut(C);
             break;
@@ -184,7 +184,6 @@ int main()
         case 2:
         {
             int count = 8;
-            //int freeThreads = 16;
             StartSizeMatrix = N;
             matricesGenerate(A, B, C, N);
             strassenMultiple(A, B, C, N/count);
@@ -192,11 +191,47 @@ int main()
             break;
 		}
         case 3:
-		{
+	    {
+	        Matrix A;
+            Matrix B;
+            //Matrix cur1;
+            Matrix C1;
+            matricesGenerate(A, B, C1, N);
+
+            std::vector<std::thread> multipleThreads = std::vector<std::thread>(threadsCount); 
+            for (int index = 0; index < threadsCount; index++) 
+            {
+                multipleThreads[index] = std::thread(multiple,
+                                        std::ref(A), 
+                                        std::ref(B),
+                                        std::ref(C1),
+                                        index,
+                                        threadsCount);
+            }
+            for(auto& thread: multipleThreads) 
+            {
+                thread.join(); 
+            }
+            Matrix C2 = Matrix(N, N);
+            int count = 8;
+            StartSizeMatrix = N;
+            strassenMultiple(A, B, C2, N/count);
+            for(int i = 0; i < N; i++)
+            {
+                for(int j = 0; j < N; j++)
+                {
+                    if (C1.matrix[i][j] != C2.matrix[i][j])
+                    {
+                        std::cout<<"Не работает что-то";
+                        exit();
+                    }
+                }
+            }
+            
             break;
 		}
        }
-    
+   
    return 0;
 }
 
