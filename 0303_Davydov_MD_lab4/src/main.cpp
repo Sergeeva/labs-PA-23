@@ -38,7 +38,8 @@ void strassenMultiple(Matrix initA, Matrix initB, Matrix& C, int limit)
                 A22.matrix[i][j] = initA.matrix[i + half][j + half];
                 B11.matrix[i][j] = initB.matrix[i][j];
                 B12.matrix[i][j] = initB.matrix[i][j + half];
-                B21.matrix[i][j] = initB.matrix[i + half][j + half];
+                B21.matrix[i][j] = initB.matrix[i + half][j];
+                B22.matrix[i][j] = initB.matrix[i + half][j + half];
             }
         }
         Matrix P1(half,half); 
@@ -223,7 +224,7 @@ int main()
                     if (C1.matrix[i][j] != C2.matrix[i][j])
                     {
                         std::cout<<"Не работает что-то";
-                        exit();
+                        exit(1);
                     }
                 }
             }
