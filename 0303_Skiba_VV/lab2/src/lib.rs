@@ -9,6 +9,18 @@ pub use my_shared_queue::*;
 mod task_runner;
 pub use task_runner::*;
 
+mod my_lock_free_queue;
+pub use my_lock_free_queue::*;
+
+mod shared_queue_runner;
+pub use shared_queue_runner::*;
+
+mod crossbeam_shared_queue;
+pub use crossbeam_shared_queue::*;
+
+mod async_task_runner;
+pub use async_task_runner::*;
+pub mod custom_sync_primitieves;
 
 #[derive(Debug)]
 pub struct TaskPoolCounters {

@@ -9,76 +9,58 @@ use std::time::{Duration, Instant};
 
 use crossbeam::queue::SegQueue;
 
-use lab2::{BasicQueue, MySharedQueue, input_square_matrices, multiply_matrices, MatExt, TaskPoolCounters, run_tasks, BlockingQueueRunner, SharedQueueRunner};
+use lab2::{BasicQueue, MySharedQueue, input_square_matrices, multiply_matrices, MatExt, TaskPoolCounters, run_tasks, BlockingQueueRunner, MyLockFreeQueue, async_run_tasks};
 
 
 fn main() -> anyhow::Result<()> {
-    // println!("\n\t*** LAB2 ***");
-    print!(" > Enter producers count: ");
-    stdout().flush()?;
+    let args: Vec<String> = std::env::args().collect();
+    let producers_c = args.get(1).map(|s| s.parse::<usize>().unwrap()).unwrap_or(40);
+    let consumers_c = args.get(2).map(|s| s.parse::<usize>().unwrap()).unwrap_or(100);
+    let matrix_size = args.get(3).map(|s| s.parse::<usize>().unwrap()).unwrap_or(50);
 
+    println!("Running with {} producer(s), {} consumer(s), matrix size {}...", producers_c, consumers_c, matrix_size);
 
-    // let mut producers_c = String::new();
-    // stdin().read_line(&mut producers_c)?;
-    // let producers_c: usize = producers_c.trim().parse()?;
-    let producers_c = 10000;
+    #[cfg(not(feature="parking"))]
+    use lab2::SharedQueueRunner as SharedQueueRunner;
+    #[cfg(feature="parking")]
+    use lab2::ParkerSharedQueueRunner as SharedQueueRunner;
 
-    print!(" > Enter consumers count: ");
-    stdout().flush()?;
+    #[cfg(feature="crossbeam_queue")]
+    {
+        println!("Running SharedQueueRunner using SegQueue...");
+        let dur = run_tasks::<SharedQueueRunner<SegQueue<_>>>(producers_c, consumers_c, matrix_size);
+        println!("Executing all tasks took {:?}!", dur);
+    }
 
-    // let mut consumers_c = String::new();
-    // stdin().read_line(&mut consumers_c)?;
-    // let consumers_c: usize = consumers_c.trim().parse()?;
-    let consumers_c = 10000;
+    #[cfg(feature="my_shared_queue")]
+    {
+        println!("Running SharedQueueRunner using MySharedQueue...");
+        let dur = run_tasks::<SharedQueueRunner<MySharedQueue<_>>>(producers_c, consumers_c, matrix_size);
+        println!("Executing all tasks took {:?}!", dur);
+    }
 
-    print!(" > Enter matrix size: ");
-    stdout().flush()?;
+    #[cfg(feature="my_lock_free_queue")]
+    {
+        println!("Running SharedQueueRunner using MyLockFreeQueue...");
+        let dur = run_tasks::<SharedQueueRunner<MyLockFreeQueue<_>>>(producers_c, consumers_c, matrix_size);
+        println!("Executing all tasks took {:?}!", dur);
+    }
 
-    // let mut matrix_size = String::new();
-    // stdin().read_line(&mut matrix_size)?;
-    // let matrix_size: usize = matrix_size.trim().parse()?;
-    let matrix_size = 1;
+    #[cfg(feature="my_blocking_queue")]
+    {
+        println!("Running BlockingQueuerunner`...");
+        let dur = run_tasks::<BlockingQueueRunner>(producers_c, consumers_c, matrix_size);
+        println!("Executing all tasks took {:?}!", dur);
+    }
 
-
-    // let q = BlockingQueue::new();
-    // q.push(123);
-    // q.push(321);
-    // println!("pop {:?}", q.pop());
-    // q.push(555);
-    //
-    // println!("pop {:?}", q.pop());
-    // println!("pop {:?}", q.pop());
-    // println!("pop {:?}", q.pop());
-    //
-    // let q_clone = q.clone();
-    // thread::spawn(move|| {
-    //     q_clone.push(123);
-    // }).join().unwrap();
-    //
-    // println!("pop {:?}", q.pop());
-    //
-    // let p_q = Arc::new(PartialBlockQueue::new());
-    // p_q.push(123);
-    // p_q.push(321);
-    // println!("pop {:?}", p_q.pop());
-    // p_q.push(555);
-    //
-    // println!("pop {:?}", p_q.pop());
-    // println!("pop {:?}", p_q.pop());
-    // println!("pop {:?}", p_q.pop());
-    //
-    // let p_q_clone = p_q.clone();
-    // thread::spawn(move|| {
-    //     p_q_clone.push(123);
-    // }).join().unwrap();
-    //
-    // println!("pop {:?}", p_q.pop());
-
-    let dur = run_tasks::<SharedQueueRunner>(consumers_c, producers_c, matrix_size);
-    println!("Executing all tasks took {:?}!", dur);
-
-    let dur = run_tasks::<BlockingQueueRunner>(consumers_c, producers_c, matrix_size);
-    println!("Executing all tasks took {:?}!", dur);
+    #[cfg(feature="async_channels_threads")]
+    {
+        println!("Running async runner...");
+        let dur = tokio::runtime::Builder::new_current_thread().build().unwrap().block_on(async move {
+            async_run_tasks(producers_c, consumers_c, matrix_size).await
+        });
+        println!("Executing all tasks took {:?}!", dur);
+    }
 
     Ok(())
 }
