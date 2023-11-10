@@ -6,7 +6,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class ThreadSafeQueue<T> {
+public class ThreadSafeQueue<T> implements CustomQueue<T> {
 
     private final Queue<T> queue = new LinkedList<>();
 

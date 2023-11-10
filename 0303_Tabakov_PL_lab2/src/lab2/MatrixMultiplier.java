@@ -29,8 +29,8 @@ public class MatrixMultiplier {
             return;
         }
 
-        ThreadSafeQueue<Matrices> queueMatrices = new ThreadSafeQueue<>();
-        ThreadSafeQueue<Matrix> queueResults = new ThreadSafeQueue<>();
+        CustomQueue<Matrices> queueMatrices = new ThreadSafeQueue<>();
+        CustomQueue<Matrix> queueResults = new ThreadSafeQueue<>();
 
         List<Thread> threads = new ArrayList<>();
 
@@ -77,37 +77,44 @@ public class MatrixMultiplier {
     }
 
 
-    static void producer(ThreadSafeQueue<Matrices> queueMatrices) {
+    static void producer(CustomQueue<Matrices> queueMatrices) {
         while (!finished) {
             queueMatrices.add(new Matrices(new Matrix(MATRIX_SIZE), new Matrix(MATRIX_SIZE)));
             generated.incrementAndGet();
         }
     }
 
-    static void consumer(ThreadSafeQueue<Matrices> queueMatrices, ThreadSafeQueue<Matrix> queueResults) {
+    static void consumer(CustomQueue<Matrices> queueMatrices, CustomQueue<Matrix> queueResults) {
 
         while (!finished) {
-            Matrices matrices = queueMatrices.take();
+            try {
+                Matrices matrices = queueMatrices.take();
+                Matrix result = matrices.first.multiply(matrices.second);
+                queueResults.add(result);
+                multiplied.incrementAndGet();
+            } catch (Exception ignored) {
 
-            Matrix result = matrices.first.multiply(matrices.second);
-            queueResults.add(result);
-            multiplied.incrementAndGet();
+            }
         }
     }
 
-    static void writer(ThreadSafeQueue<Matrix> queueResults, FileWriter file) {
+    static void writer(CustomQueue<Matrix> queueResults, FileWriter file) {
         while (!finished) {
-            Matrix result = queueResults.take();
-            if (result == null) {
-                return;
-            }
-
-            // Write the matrix to the file
             try {
-                file.write(result.toString());
-                printed.incrementAndGet();
-            } catch (IOException e) {
-                e.printStackTrace();
+                Matrix result = queueResults.take();
+                if (result == null) {
+                    return;
+                }
+
+                // Write the matrix to the file
+                try {
+                    file.write(result.toString());
+                    printed.incrementAndGet();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } catch (Exception ignored) {
+
             }
         }
     }
