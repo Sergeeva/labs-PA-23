@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 
 use crossbeam::queue::SegQueue;
 
-use lab2::{BasicQueue, MySharedQueue, input_square_matrices, multiply_matrices, MatExt, TaskPoolCounters, run_tasks, BlockingQueueRunner, MyLockFreeQueue, async_run_tasks};
+use lab2::{BasicQueue, MySharedQueue, input_square_matrices, multiply_matrices, MatExt, TaskPoolCounters, run_tasks, BlockingQueueRunner, LockFreeQueue, async_run_tasks};
 
 
 fn main() -> anyhow::Result<()> {
@@ -20,9 +20,9 @@ fn main() -> anyhow::Result<()> {
 
     println!("Running with {} producer(s), {} consumer(s), matrix size {}...", producers_c, consumers_c, matrix_size);
 
-    #[cfg(not(feature="parking"))]
+    #[cfg(not(feature="parking-backoff-runner"))]
     use lab2::SharedQueueRunner as SharedQueueRunner;
-    #[cfg(feature="parking")]
+    #[cfg(feature="parking-backoff-runner")]
     use lab2::ParkerSharedQueueRunner as SharedQueueRunner;
 
     #[cfg(feature="crossbeam_queue")]
@@ -39,10 +39,10 @@ fn main() -> anyhow::Result<()> {
         println!("Executing all tasks took {:?}!", dur);
     }
 
-    #[cfg(feature="my_lock_free_queue")]
+    #[cfg(feature="lock_free_queue")]
     {
         println!("Running SharedQueueRunner using MyLockFreeQueue...");
-        let dur = run_tasks::<SharedQueueRunner<MyLockFreeQueue<_>>>(producers_c, consumers_c, matrix_size);
+        let dur = run_tasks::<SharedQueueRunner<LockFreeQueue<_>>>(producers_c, consumers_c, matrix_size);
         println!("Executing all tasks took {:?}!", dur);
     }
 

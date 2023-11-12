@@ -2,7 +2,7 @@ use std::{cell::RefCell, mem};
 use crate::custom_sync_primitieves::*;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
-use crate::{input_square_matrices, Mat, multiply_matrices, Runner, SharedDataBuilder, TaskPoolCounters, TASKS_SOLVED};
+use crate::{input_square_matrices, Mat, multiply_matrices, Runner, SharedDataBuilder, TaskPoolCounters, TASKS_PREPARED, TASKS_SOLVED};
 
 #[derive(Debug)]
 pub struct BasicQueue<T> {
@@ -81,9 +81,9 @@ impl<T> SharedDataBuilder for BlockingQueueSharedData<T> {
 }
 
 impl Runner for BlockingQueueRunner {
-    type Msg = (Mat, Mat);
     type SharedData = BlockingQueueSharedData<Self::Msg>;
-    fn run_producer(mat_size: usize, shared_data: Arc<Self::SharedData>) {
+    type Msg = (Mat, Mat);
+    fn run_producer(mat_size: usize, shared_data: Arc<Self::SharedData>, i: usize) {
         let rand_mat = input_square_matrices(mat_size); // payload outside
         let mut guard = shared_data.task_pool.mylock();
         guard.1.push(rand_mat);
@@ -94,12 +94,11 @@ impl Runner for BlockingQueueRunner {
             shared_data.consumer_waiter.notify_all();
         }
         drop(guard);
-        // TASKS_PREPARED.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         // println!("Producer {} finished 1 task", i);
     }
-    fn run_consumer(shared_data: Arc<Self::SharedData>) {
+    fn run_consumer(shared_data: Arc<Self::SharedData>, i: usize) {
         let mut guard = shared_data.task_pool.mylock();
-        while !guard.0.has_planned_tasks() { //exit condition, help to finish thread when there is no work to do
+        while guard.0.has_planned_tasks() { //exit condition, help to finish thread when there is no work to do
             if guard.1.is_empty() {
                 // println!("\tConsumer {} is waiting...", i);
                 guard = shared_data.consumer_waiter.mywait(guard);

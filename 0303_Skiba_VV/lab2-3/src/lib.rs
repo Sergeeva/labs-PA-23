@@ -9,8 +9,8 @@ pub use my_shared_queue::*;
 mod task_runner;
 pub use task_runner::*;
 
-mod my_lock_free_queue;
-pub use my_lock_free_queue::*;
+mod lock_free_queue;
+pub use lock_free_queue::*;
 
 mod shared_queue_runner;
 pub use shared_queue_runner::*;
@@ -46,6 +46,6 @@ impl TaskPoolCounters {
         self.producers_tasks_remaining == 0
     }
     pub fn has_planned_tasks(&self) -> bool {
-        self.consumers_tasks_remaining == 0
+        self.consumers_tasks_remaining > 0
     }
 }
