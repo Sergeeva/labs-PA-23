@@ -3,14 +3,15 @@ use crossbeam::queue::SegQueue;
 use crate::{input_square_matrices, Mat, multiply_matrices, Runner, SharedDataBuilder, SharedQueue, TaskPoolCounters};
 
 use crate::custom_sync_primitieves::*;
+use std::fmt::Debug;
 
 #[derive(Debug)]
-pub struct MySharedQueue<T> {
-    head: Mutex<MySharedQueueLink<T>>,
-    tail: Mutex<MySharedQueueLink<T>>
+pub struct MySharedQueue<T> where T: Debug {
+    head: MySharedQueueLink<T>,
+    tail: MySharedQueueLink<T>
 }
 
-pub type MySharedQueueLink<T> = Option<Arc<Mutex<SharedQueueNode<T>>>>;
+pub type MySharedQueueLink<T> = Mutex<Option<Arc<SharedQueueNode<T>>>>;
 
 
 #[derive(Debug)]
@@ -19,17 +20,17 @@ pub struct SharedQueueNode<T> {
     next: MySharedQueueLink<T>
 }
 
-impl<T> SharedQueueNode<T> {
+impl<T: Debug> SharedQueueNode<T> {
     pub fn new(val: T) -> Self {
         Self {
             val,
-            next: None
+            next: Mutex::new(None)
         }
     }
 }
 
 
-impl<T> SharedQueue for MySharedQueue<T> {
+impl<T: Debug> SharedQueue for MySharedQueue<T> {
     type Item = T;
 
     fn new() -> Self {
@@ -38,39 +39,35 @@ impl<T> SharedQueue for MySharedQueue<T> {
             tail: Mutex::new(None)
         }
     }
+
     fn push(&self, val: T) {
 
-        let new_tail = Arc::new(Mutex::new(SharedQueueNode::new(val)));
+        let new_tail = Arc::new(SharedQueueNode::new(val));
 
-        let self_tail = &mut *self.tail.mylock();
-        let old_tail = mem::replace(self_tail, Some(new_tail.clone()));
-        let _ = self_tail;
-        if let Some(n) = old_tail {
-            n.mylock().next = Some(new_tail);
+        let mut tail_guard = self.tail.mylock();
+
+        if let Some(old_tail) = tail_guard.take() {
+            *old_tail.next.mylock() = Some(new_tail.clone());
+        } else {
+            *self.head.mylock() = Some(new_tail.clone());
         }
-        else {
-            let self_head = &mut *self.head.mylock();
-            *self_head = Some(new_tail.clone());
-        }
+
+        *tail_guard = Some(new_tail);
     }
 
     fn pop(&self) -> Option<T> {
-        let self_head = &mut *self.head.mylock();
+        let mut head_guard = self.head.mylock();
 
-        let old_head = self_head.take();
-        if let Some(n) = old_head {
-            *self_head = n.mylock().next.take();
-            if self_head.is_none() {
-                let self_tail = &mut *self.tail.mylock();
-                *self_tail = None;
+        if let Some(old_head) = head_guard.take() {
+            *head_guard = old_head.next.mylock().take();
+            if head_guard.is_none() {
+                *self.tail.mylock() = None;
             }
-            let _ = self_head;
-                let val = Arc::try_unwrap(n).ok().unwrap().my_into_inner().val;
-            Some(val)
+
+            return Some(Arc::try_unwrap(old_head).unwrap().val)
         }
-        else {
-            None
-        }
+
+        None
     }
 
     fn is_empty(&self) -> bool {
@@ -78,7 +75,7 @@ impl<T> SharedQueue for MySharedQueue<T> {
     }
 }
 
-impl<T> Drop for MySharedQueue<T> {
+impl<T: Debug> Drop for MySharedQueue<T> {
     fn drop(&mut self) {
         while self.pop().is_some() {}
     }
