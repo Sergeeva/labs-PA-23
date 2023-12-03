@@ -9,9 +9,15 @@
 namespace // anonymous
 {
 
-constexpr size_t maxOclDevices = 64;
 constexpr char kernelFile[] = "kernels/mandelbrot.cl";
 constexpr char kernelFn[] = "calculate";
+
+
+size_t Align( const size_t min, const size_t factor )
+{
+    return ( min + factor - 1 ) / factor * factor;
+} // Align
+
 
 void OclProcessRc( cl_int rc, const std::string& filename, size_t line )
 {
@@ -26,18 +32,18 @@ void OclProcessRc( cl_int rc, const std::string& filename, size_t line )
 #define OCL_CHECK_RC( rc ) OclProcessRc( rc, __FILE__, __LINE__ );
 
 
-cl_context OclCreateContext( std::array< cl_device_id, maxOclDevices >& devices, cl_uint& devCount )
+cl_context OclCreateContext( cl_device_id& device )
 {
     cl_int rc = -30;
 
     cl_platform_id platform;
     OCL_CHECK_RC( clGetPlatformIDs( 1, &platform, nullptr ) );
 
-    rc = clGetDeviceIDs( platform, CL_DEVICE_TYPE_GPU, maxOclDevices, devices.data(), &devCount );
+    rc = clGetDeviceIDs( platform, CL_DEVICE_TYPE_GPU, 1, &device, nullptr );
     if ( CL_SUCCESS != rc )
     {
-        std::cerr << "No GPUs found (error code: " << rc << "). Trying to use CPUs\n";
-        OCL_CHECK_RC( clGetDeviceIDs( platform, CL_DEVICE_TYPE_CPU, maxOclDevices, devices.data(), &devCount ) );
+        std::cerr << "No GPU found (error code: " << rc << "). Trying to use CPU\n";
+        OCL_CHECK_RC( clGetDeviceIDs( platform, CL_DEVICE_TYPE_CPU, 1, &device, nullptr ) );
     }
 
     const cl_context_properties contextProperties[] = {
@@ -45,7 +51,7 @@ cl_context OclCreateContext( std::array< cl_device_id, maxOclDevices >& devices,
         , 0
     };
 
-    cl_context context = clCreateContext( contextProperties, devCount, devices.data(), nullptr, nullptr, &rc );
+    cl_context context = clCreateContext( contextProperties, 1, &device, nullptr, nullptr, &rc );
     OCL_CHECK_RC( rc );
 
     return context;
@@ -53,52 +59,37 @@ cl_context OclCreateContext( std::array< cl_device_id, maxOclDevices >& devices,
 
 
 cl_program OclCreateProgram(
-      cl_context context
-    , const std::vector< std::string >& files
-    , const std::vector< std::string >& kernelNames
-    , const std::array< cl_device_id, maxOclDevices>& devices
-    , cl_uint devCount
-    , std::vector< cl_kernel >& kernels )
+    cl_context context
+    , const std::string& file
+    , const std::string& kernelName
+    , const cl_device_id device
+    , cl_kernel& kernel )
 {
     cl_int rc;
 
-    std::vector< std::string > filesContent;
-    std::vector< const char* > filesRawContent;
-    std::vector< size_t > filesLength;
+    std::ifstream fileStream( file );
+    std::stringstream buffer;
+    buffer << fileStream.rdbuf();
+    const std::string sourceCode{ buffer.str() };
+    const char* sourceCodePtr = sourceCode.c_str();
+    const size_t sourceCodeLength{ sourceCode.length() };
 
-    for ( const auto& file: files )
-    {
-        std::ifstream fileStream( file );
-        std::stringstream buffer;
-        buffer << fileStream.rdbuf();
-        filesContent.push_back( buffer.str() );
-        filesRawContent.emplace_back( filesContent.back().c_str() );
-        filesLength.emplace_back( filesContent.back().length() );
-    }
-
-    cl_program program = clCreateProgramWithSource( context, files.size(), filesRawContent.data(), filesLength.data(), &rc );
+    cl_program program = clCreateProgramWithSource( context, 1, &sourceCodePtr, &sourceCodeLength, &rc );
     OCL_CHECK_RC( rc );
 
-    rc = clBuildProgram( program, devCount, devices.data(), nullptr, nullptr, nullptr );
+    rc = clBuildProgram( program, 1, &device, nullptr, nullptr, nullptr );
     if ( CL_SUCCESS != rc )
     {
         size_t buildLogSize = 0;
-        for ( size_t i = 0; i < devCount; ++i )
-        {
-            clGetProgramBuildInfo( program, devices[ i ], CL_PROGRAM_BUILD_LOG, 0, NULL, &buildLogSize );
-            std::vector< char > buildLog( buildLogSize );
-            clGetProgramBuildInfo( program, devices[ i ], CL_PROGRAM_BUILD_LOG, buildLogSize, buildLog.data(), NULL );
-            std::cerr << buildLog.data() << std::endl;
-        }
+        clGetProgramBuildInfo( program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, &buildLogSize );
+        std::vector< char > buildLog( buildLogSize );
+        clGetProgramBuildInfo( program, device, CL_PROGRAM_BUILD_LOG, buildLogSize, buildLog.data(), NULL );
+        std::cerr << buildLog.data() << std::endl;
         OCL_CHECK_RC( rc );
     }
 
-    for ( const auto& kernelName: kernelNames )
-    {
-        cl_kernel kernel = clCreateKernel( program, kernelName.c_str(), &rc );
-        OCL_CHECK_RC( rc );
-        kernels.push_back( kernel );
-    }
+    kernel = clCreateKernel( program, kernelName.c_str(), &rc );
+    OCL_CHECK_RC( rc );
 
     return program;
 } // OclCreateProgram
@@ -113,73 +104,66 @@ MandelbrotCl::MandelbrotCl( size_t w, size_t h, size_t iterations )
 
 void MandelbrotCl::Generate()
 {
-    const size_t dataSize = width_ * height_;
+    constexpr size_t workGroupSize[ 2 ] = { 128, 1 };
+    const size_t globalSize[ 2 ] = { Align( width_, workGroupSize[ 0 ] ), Align( height_, workGroupSize[ 1 ] ) };
+    const size_t dataSize = globalSize[ 0 ] * globalSize[ 1 ];
+    std::unique_ptr< uint8_t[] > data = std::make_unique< uint8_t[] >( dataSize );
 
     cl_int rc;
-    std::array< cl_device_id, maxOclDevices > devices;
-    cl_uint devCount;
+    cl_device_id device;
     cl_context context;
-    std::array< cl_command_queue, maxOclDevices > commandQueues;
+    cl_command_queue commandQueue;
     cl_mem buffer;
     cl_program program;
-    std::vector< cl_kernel > kernels;
+    cl_kernel kernel;
 
     try
     {
-        context = OclCreateContext( devices, devCount );
+        context = OclCreateContext( device );
 
-        for ( size_t i = 0; i < devCount; ++i )
-        {
-            commandQueues[ i ] = clCreateCommandQueueWithProperties( context, devices[ i ], nullptr, &rc );
-            OCL_CHECK_RC( rc );
-        }
+        commandQueue = clCreateCommandQueueWithProperties( context, device, nullptr, &rc );
+        OCL_CHECK_RC( rc );
 
         buffer = clCreateBuffer( context, CL_MEM_WRITE_ONLY, dataSize, nullptr, &rc );
         OCL_CHECK_RC( rc );
 
-        program = OclCreateProgram( context, { kernelFile }, { kernelFn }, devices, devCount, kernels );
+        program = OclCreateProgram( context, kernelFile, kernelFn, device, kernel );
 
         int iterations = static_cast< int >( iterations_ );
-        for ( cl_kernel kernel: kernels )
+        int width = static_cast< int >( width_ );
+        int height = static_cast< int >( height_ );
+
+        OCL_CHECK_RC( clSetKernelArg( kernel, 0, sizeof( iterations ), &iterations ) );
+        OCL_CHECK_RC( clSetKernelArg( kernel, 1, sizeof( width ), &width ) );
+        OCL_CHECK_RC( clSetKernelArg( kernel, 2, sizeof( height ), &height ) );
+        OCL_CHECK_RC( clSetKernelArg( kernel, 3, sizeof( buffer ), &buffer ) );
+
+        OCL_CHECK_RC( clEnqueueNDRangeKernel(
+            commandQueue
+            , kernel
+            , 2
+            , nullptr
+            , globalSize
+            , workGroupSize
+            , 0
+            , nullptr
+            , nullptr
+        ) );
+
+        OCL_CHECK_RC( clEnqueueReadBuffer( commandQueue, buffer, CL_TRUE
+                                         , 0, dataSize, data.get(), 0, nullptr, nullptr ) );
+        for ( size_t y = 0; y < height_; ++y )
         {
-            OCL_CHECK_RC( clSetKernelArg( kernel, 0, sizeof( iterations ), &iterations ) );
-            OCL_CHECK_RC( clSetKernelArg( kernel, 1, sizeof( buffer ), &buffer ) );
+            for ( size_t x = 0; x < width_; ++x )
+            {
+                points_[ x + y * width_ ] = data[ x + y * globalSize[ 0 ] ];
+            }
         }
 
-        const size_t dataHeightSize = height_ / devCount;
-        for ( size_t i = 0; i < devCount; ++i )
-        {
-            const size_t currentHeightSize = ( ( i == devCount - 1 ) ? ( height_ - dataHeightSize * devCount ) : 0 ) + dataHeightSize;
-            const size_t offset = dataHeightSize * i;
-            const size_t workOffset[ 2 ] = { 0, offset };
-            const size_t workSize[ 2 ] = { width_, currentHeightSize };
-
-            OCL_CHECK_RC( clEnqueueNDRangeKernel(
-                  commandQueues[ i ]
-                , kernels[ 0 ]
-                , 2
-                , workOffset
-                , workSize
-                , nullptr
-                , 0
-                , nullptr
-                , nullptr
-            ) );
-
-            OCL_CHECK_RC( clEnqueueReadBuffer( commandQueues[ i ], buffer, CL_FALSE
-                , offset * width_, currentHeightSize * width_, points_.get(), 0, nullptr, nullptr ) );
-        }
-
-        for ( cl_kernel kernel: kernels )
-        {
-            OCL_CHECK_RC( clReleaseKernel( kernel ) );
-        }
+        OCL_CHECK_RC( clReleaseKernel( kernel ) );
         OCL_CHECK_RC( clReleaseProgram( program ) );
         OCL_CHECK_RC( clReleaseMemObject( buffer ) );
-        for ( size_t i = 0; i < devCount; ++i )
-        {
-            OCL_CHECK_RC( clReleaseCommandQueue( commandQueues[ i ] ) );
-        }
+        OCL_CHECK_RC( clReleaseCommandQueue( commandQueue ) );
         OCL_CHECK_RC( clReleaseContext( context ) );
     }
     catch ( const std::exception& e )
