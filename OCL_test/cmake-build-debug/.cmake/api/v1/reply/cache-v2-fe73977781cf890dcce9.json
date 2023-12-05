@@ -2,42 +2,6 @@
 	"entries" : 
 	[
 		{
-			"name" : "0304_Aristarkhov_Ilya_lab4_BINARY_DIR",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Value Computed by CMake"
-				}
-			],
-			"type" : "STATIC",
-			"value" : "/home/ilya201232/CLionProjects/labs-PA-23/0304_Aristarkhov_Ilya_lab4/cmake-build-debug"
-		},
-		{
-			"name" : "0304_Aristarkhov_Ilya_lab4_IS_TOP_LEVEL",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Value Computed by CMake"
-				}
-			],
-			"type" : "STATIC",
-			"value" : "ON"
-		},
-		{
-			"name" : "0304_Aristarkhov_Ilya_lab4_SOURCE_DIR",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Value Computed by CMake"
-				}
-			],
-			"type" : "STATIC",
-			"value" : "/home/ilya201232/CLionProjects/labs-PA-23/0304_Aristarkhov_Ilya_lab4"
-		},
-		{
 			"name" : "CMAKE_ADDR2LINE",
 			"properties" : 
 			[
@@ -91,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/ilya201232/CLionProjects/labs-PA-23/0304_Aristarkhov_Ilya_lab4/cmake-build-debug"
+			"value" : "/home/ilya201232/CLionProjects/labs-PA-23/OCL_test/cmake-build-debug"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -207,7 +171,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/usr/bin/gcc-ar-12"
+			"value" : "/usr/bin/gcc-ar-13"
 		},
 		{
 			"name" : "CMAKE_CXX_COMPILER_RANLIB",
@@ -223,7 +187,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/usr/bin/gcc-ranlib-12"
+			"value" : "/usr/bin/gcc-ranlib-13"
 		},
 		{
 			"name" : "CMAKE_CXX_FLAGS",
@@ -335,7 +299,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/usr/bin/gcc-ar-12"
+			"value" : "/usr/bin/gcc-ar-13"
 		},
 		{
 			"name" : "CMAKE_C_COMPILER_RANLIB",
@@ -351,7 +315,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/usr/bin/gcc-ranlib-12"
+			"value" : "/usr/bin/gcc-ranlib-13"
 		},
 		{
 			"name" : "CMAKE_C_FLAGS",
@@ -579,7 +543,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/ilya201232/CLionProjects/labs-PA-23/0304_Aristarkhov_Ilya_lab4/cmake-build-debug/CMakeFiles/pkgRedirects"
+			"value" : "/home/ilya201232/CLionProjects/labs-PA-23/OCL_test/cmake-build-debug/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -639,7 +603,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/ilya201232/CLionProjects/labs-PA-23/0304_Aristarkhov_Ilya_lab4"
+			"value" : "/home/ilya201232/CLionProjects/labs-PA-23/OCL_test"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -799,7 +763,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "1"
+			"value" : "3"
 		},
 		{
 			"name" : "CMAKE_OBJCOPY",
@@ -879,7 +843,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "0304_Aristarkhov_Ilya_lab4"
+			"value" : "enumDevices"
 		},
 		{
 			"name" : "CMAKE_RANLIB",
@@ -1172,6 +1136,90 @@
 			],
 			"type" : "INTERNAL",
 			"value" : "TRUE"
+		},
+		{
+			"name" : "enumDevices_BINARY_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/home/ilya201232/CLionProjects/labs-PA-23/OCL_test/cmake-build-debug"
+		},
+		{
+			"name" : "enumDevices_IS_TOP_LEVEL",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "ON"
+		},
+		{
+			"name" : "enumDevices_SOURCE_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/home/ilya201232/CLionProjects/labs-PA-23/OCL_test"
+		},
+		{
+			"name" : "libclew_BINARY_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/home/ilya201232/CLionProjects/labs-PA-23/OCL_test/cmake-build-debug/libs/clew"
+		},
+		{
+			"name" : "libclew_IS_TOP_LEVEL",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "OFF"
+		},
+		{
+			"name" : "libclew_LIB_DEPENDS",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;dl;"
+		},
+		{
+			"name" : "libclew_SOURCE_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/home/ilya201232/CLionProjects/labs-PA-23/OCL_test/libs/clew"
 		}
 	],
 	"kind" : "cache",
