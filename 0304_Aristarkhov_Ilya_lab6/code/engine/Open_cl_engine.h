@@ -38,7 +38,7 @@ public:
 
     void load_program(std::string source, std::string kernel_name);
 
-    void create_buffers(size_t size);
+    void create_buffers(size_t size, std::vector<int>& first_buffer_data, std::vector<int>& second_buffer_data);
 
     void read_buffer(int* result, size_t size);
 

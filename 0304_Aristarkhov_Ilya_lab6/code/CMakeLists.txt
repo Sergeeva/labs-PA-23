@@ -10,6 +10,11 @@ add_executable(OpenCLTest main.cpp
         assert/assert_cl.cpp
         engine/Open_cl_engine.cpp
         engine/Open_cl_engine.h
-        png/svgpng.hpp)
+        png/svgpng.hpp
+        strassen/model/Square_matrix.cpp
+        strassen/model/Square_matrix.h
+        strassen/thread/Matrix_threading.cpp
+        strassen/thread/Matrix_threading.h
+)
 
 target_link_libraries(OpenCLTest OpenCL::OpenCL)

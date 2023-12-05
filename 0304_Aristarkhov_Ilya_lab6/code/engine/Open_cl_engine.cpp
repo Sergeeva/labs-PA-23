@@ -35,22 +35,8 @@ void Open_cl_engine::load_program(std::string source, std::string kernel_name) {
     cl_ok(err);
 }
 
-void Open_cl_engine::create_buffers(size_t size) {
+void Open_cl_engine::create_buffers(size_t size, std::vector<int>& first_buffer_data, std::vector<int>& second_buffer_data) {
     cl_int err = 0;
-
-    std::random_device rd;
-    std::mt19937 mt{rd()};
-    std::uniform_int_distribution die100{-100, 100};
-
-    std::vector<int> first_buffer_data(size * size);
-    std::vector<int> second_buffer_data(size * size);
-
-    for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) {
-            first_buffer_data[i * size + j] = die100(mt);
-            second_buffer_data[i * size + j] = die100(mt);
-        }
-    }
 
     first_buffer = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(int) * size * size, first_buffer_data.data(), &err);
     cl_ok(err);
@@ -145,10 +131,10 @@ void Open_cl_engine::build(std::string source) {
 
     if (err == CL_BUILD_PROGRAM_FAILURE) {
 
-        size_t value_sz;
+        size_t value_sz = 0;
         cl(clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &value_sz));
 
-        std::vector<unsigned char> value;
+        std::vector<unsigned char> value(value_sz);
         cl(clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, value_sz, value.data(), nullptr));
 
 

@@ -8,7 +8,7 @@
 int main(int args, char** argv) {
 
 #ifdef DEBUG
-    int matrix_size {1024};
+    int matrix_size {32};
 #else
     if (args != 2) {
         std::exit(-1);
