@@ -5,7 +5,7 @@
 
 int main() {
     if (!ocl_init()) throw;
-    static const int size = 1024;
+    static const int size = 4096;
     cl_device_id device = create_device();
     cl_context ctx = clCreateContext(NULL, 1, &device, NULL, NULL, NULL);
     cl_program program = build_program(ctx, device);
@@ -35,7 +35,7 @@ int main() {
 
     cl_mem result_buffer = clCreateBuffer(
         ctx,
-        CL_MEM_WRITE_ONLY,
+        CL_MEM_READ_WRITE,
         sizeof(cl_int) * size * size,
         NULL,
         NULL
@@ -54,7 +54,7 @@ int main() {
     );
 
     auto end_programm = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_programm - start_programm);
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_programm - start_programm);
     std::cout << duration.count() << std::endl;
 
     save_result(result.data(), size);

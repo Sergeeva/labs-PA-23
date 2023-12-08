@@ -1,6 +1,5 @@
 #include "../include/utils.hpp"
 
-
 std::string get_program_text() {
     std::ifstream f("./kernel.cl");
     std::stringstream ss;

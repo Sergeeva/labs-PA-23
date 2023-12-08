@@ -1,7 +1,7 @@
 #include "../include/utils.hpp"
 
 
-int align(int x, int y) {
+size_t align(int x, int y) {
     return (x + y - 1) / y * y;
 }
 
@@ -19,7 +19,7 @@ void invoke_kernel(
     clSetKernelArg(kernel, 1, sizeof(cl_mem), &right);
     clSetKernelArg(kernel, 2, sizeof(int), &size);
     clSetKernelArg(kernel, 3, sizeof(cl_mem), &kernel_result);
-    size_t local_size[2] = {64, 1};
+    size_t local_size[2] = {16, 16};
     size_t global_size[2] = {
         align(size, local_size[0]),
         align(size, local_size[1])
