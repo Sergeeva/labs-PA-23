@@ -52,27 +52,6 @@ void Matrix::operator= (const Matrix&& other) noexcept {
 }
 
 
-//int* Matrix::to_array(bool row_first) {
-//    cl_int* res = new cl_int[cl_int(this->rows) * this->cols];
-//    if (row_first) {
-//        for (int r = 0; r < this->rows; r++) {
-//            for (int c = 0; c < this->cols; c++) {
-//                res[r * this->cols + c] = this->matrix[r][c];
-//            }
-//        }
-//    }
-//    else {
-//        for (int r = 0; r < this->rows; r++) {
-//            for (int c = 0; c < this->cols; c++) {
-//                res[c * this->rows + r] = this->matrix[r][c];
-//            }
-//        }
-//    }
-//
-//    return res;
-//}
-
-
 std::ostream& operator<< (std::ostream& os, const Matrix& m) {
     os << m.rows << ' ' << m.cols << '\n';
     for (int i = 0; i < m.rows; i++) {

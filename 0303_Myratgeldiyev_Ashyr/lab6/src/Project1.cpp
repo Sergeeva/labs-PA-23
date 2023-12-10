@@ -46,7 +46,6 @@ cl_device_id create_device() {
 cl_program build_program(cl_context ctx, cl_device_id dev) {
 	int err = 0;
 
-	// получение текста кода для kernel
 	std::ifstream t(CL_FILENAME);
 	std::string src((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 	t.close();
@@ -54,12 +53,8 @@ cl_program build_program(cl_context ctx, cl_device_id dev) {
 	const char* src_text = src.data();
 	size_t src_length = src.size();
 	
-	// загрузка текста kernel в программу
 	cl_program program = clCreateProgramWithSource(ctx, 1, &src_text, &src_length, &err);
-	//cout << "Error during program call " << err << '\n';
-	// собираем программу
 	err |= clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
-	//cout << "Error during building program " << err << '\n';
 	
 	if (err) {
 		cout << "Thrown error " << err << '\n';
@@ -86,22 +81,19 @@ cl_program build_program(cl_context ctx, cl_device_id dev) {
 unsigned long invoke_kernel(cl_kernel kernel, cl_command_queue queue, cl_mem& A, cl_mem& B, cl_mem& buff,
 	cl_int* result, const int size) {
 	cl_int err = 0;
-	// установка аргументов для kernel
 	err |= clSetKernelArg(kernel, 0, sizeof(A), &A);  
 	err |= clSetKernelArg(kernel, 1, sizeof(B), &B);  
 	err |= clSetKernelArg(kernel, 2, sizeof(buff), &buff);  
 	err |= clSetKernelArg(kernel, 3, sizeof(int), &size);
 	
 	
-	size_t local_size[2] = { LOCAL_SIZE, LOCAL_SIZE }; // размер рабочей группы
-	size_t global_size[2] = { size, size }; // размер рабочего пространства/контекста NDRange
-	// запускаем двумерную задачу
+	size_t local_size[2] = { LOCAL_SIZE, LOCAL_SIZE }; 
+	size_t global_size[2] = { size, size }; 
+
 	auto start = CURRENT_TIME;
 	err |= clEnqueueNDRangeKernel(queue, kernel, 2, NULL, global_size, local_size, 0, NULL, NULL);
-	// читаем результат
 	err |= clEnqueueReadBuffer(queue, buff, CL_TRUE, 0, sizeof(cl_int) * size * size, result, 0, NULL, NULL);
 
-	// ждём завершения всех операций
 	clFinish(queue);
 	return get_time_diff(start, CURRENT_TIME);
 }
@@ -115,16 +107,11 @@ int main() {
 	}
 
 	cl_int err = 0;
-	// получаем девайс
 	cl_device_id device = create_device();
-	// создаем контекст
 	cl_context context = clCreateContext(0, 1, &device, NULL, NULL, NULL);
-	// вызвали функцию сборки
 	cl_program program = build_program(context, device);
-	// получаем Kernel
 	cl_int buff_error = 0;
 	cl_kernel kernel = clCreateKernel(program, "matrix_mult", &err);
-	// создаём очередь
 	cl_command_queue queue = clCreateCommandQueue(context, device, 0, &err);
 	
 	Matrix left(MATRIX_SIZE, MATRIX_SIZE, true);
@@ -142,7 +129,6 @@ int main() {
 	cout << "GPU: " << gpu_time << " ms\n";
 	//cout << "RES: " << check_res(left * right, result);
 
-	//// освобождение ресурсов
 	clReleaseKernel(kernel);
 	clReleaseMemObject(A);
 	clReleaseMemObject(B);
