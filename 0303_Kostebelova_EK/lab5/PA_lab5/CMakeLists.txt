@@ -1,14 +1,17 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(PA_lab5)
+add_subdirectory(libs)
+
+project(mandelbrot)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(OpenCL REQUIRED)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/cl/mandelbrot.cl
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-SET(HEADERS "mandelbrot.h")
 
-SET(SRC_FILES "main.cpp" "mandelbrot.cpp")
-
-add_executable(${PROJECT_NAME} ${SRC_FILES})
-target_link_libraries(${PROJECT_NAME} OpenCL::OpenCL)
+add_executable(
+     ${PROJECT_NAME} 
+     main.cpp 
+)
+target_link_libraries(${PROJECT_NAME} libclew)
