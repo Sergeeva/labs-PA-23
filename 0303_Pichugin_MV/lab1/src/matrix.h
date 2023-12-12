@@ -12,11 +12,8 @@ void fill_matrix(vector<vector<int>>& matr, int n) {
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < n; j++) {
 			matr[i][j] = rand() % 10;
-			cout << matr[i][j] << " ";
 		}
-		cout << endl;
 	}
-	cout << "**********************************" << endl;
 }
 void write_matrix(int* matr, int n) {
 	ofstream result;
@@ -49,11 +46,8 @@ void multi_matrix(vector<vector<int>>& a, vector<vector<int>>& b, vector<vector<
 			for (int k = 0; k < n; k++) {
 				c[i][j]+= a[i][k] * b[k][j];
 			}
-			cout << c[i][j] << " ";
 		}
-		cout << endl;
 	}
-	cout << "**********************************" << endl;
 }
 
 int * matrix_to_array(vector<vector<int>>& a,int n){
