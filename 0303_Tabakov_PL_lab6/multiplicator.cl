@@ -1,6 +1,6 @@
 
 
-__kernel void matrix_mult(__global int* A, __global int* B,
+__kernel void matrix_multi(__global int* A, __global int* B,
                           __global int* C, int size) {
     const int lr = get_local_id(0);  // local_row
     const int lc = get_local_id(1);  // local_col

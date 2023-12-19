@@ -39,7 +39,7 @@ cl_device_id create_device() {
 cl_program build_program(cl_context ctx, cl_device_id dev) {
 	int err = 0;
 
-	std::ifstream t("./m_mult.cl");
+	std::ifstream t("./multiplicator.cl");
 	std::string src((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 	t.close();
 	src = "#define BS " + to_string(LOCAL_SIZE) + "\n\n" + src;
@@ -98,7 +98,7 @@ int main() {
     cl_program program = build_program(context, device);
     cl_int buff_error = 0;
     cl_int err = 0;
-	cl_kernel kernel = clCreateKernel(program, "matrix_mult", &err);
+	cl_kernel kernel = clCreateKernel(program, "matrix_multi", &err);
 	cl_command_queue queue = clCreateCommandQueue(context, device, 0, &err);
 
 	Matrix left(MATRIX_SIZE, MATRIX_SIZE, true);
