@@ -105,11 +105,8 @@ int main() {
 	Matrix right(MATRIX_SIZE, MATRIX_SIZE, true);
 	
 	cl_mem A = clCreateBuffer(context, CL_MEM_USE_HOST_PTR, sizeof(cl_int) * MATRIX_SIZE * MATRIX_SIZE, left.matrix.data(), &buff_error);
-	if (buff_error) cout << "Error while creating buffer A\n";
 	cl_mem B = clCreateBuffer(context, CL_MEM_USE_HOST_PTR, sizeof(cl_int) * MATRIX_SIZE * MATRIX_SIZE, right.matrix.data(), &buff_error);
-	if (buff_error) cout << "Error while creating buffer B\n";
 	cl_mem buff = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_int) * MATRIX_SIZE * MATRIX_SIZE, NULL, &buff_error);
-	if (buff_error) cout << "Error while creating result buffer\n";
 	std::vector<cl_int> result(MATRIX_SIZE * MATRIX_SIZE, 0);
 	
 	auto start_programm = std::chrono::high_resolution_clock::now();
