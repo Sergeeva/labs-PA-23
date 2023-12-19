@@ -80,3 +80,14 @@ std::ostream& operator<< (std::ostream& os, const Matrix& m)
     return os;
 }
 
+const char* Matrix::compare(const Matrix&& second) {
+    for (int i = 0; i < second.matrix.size(); i++) {
+        if (this->matrix[i] != second.matrix[i]) {
+            return "Failed";
+        }
+    }
+    return "Successed";
+   }
+
+
+

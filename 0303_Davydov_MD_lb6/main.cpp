@@ -137,6 +137,10 @@ int main()
 	cout << "GPU: " << gpu_time << " ms\n";
 	//cout << "RES: " << check_res(left * right, result);
 
+	Matrix res(MATRIX_SIZE, MATRIX_SIZE, true);
+    res.matrix = result;
+    cout << "Result: " << res.compare(left*right) << std::endl;
+
 	clReleaseKernel(kernel);
 	clReleaseMemObject(A);
 	clReleaseMemObject(B);

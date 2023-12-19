@@ -20,6 +20,8 @@ public:
 
     friend std::ostream& operator<< (std::ostream& stream, const Matrix& m);
 
+    const char* compare(const Matrix&& second);
+
 public:
     vector<cl_int> matrix;
     int rows, cols;

@@ -51,7 +51,7 @@ void create_kernel(cl_kernel kernel, cl_command_queue queue, cl_mem buffer, cl_u
     clSetKernelArg(kernel, 1, sizeof(cl_int), &w);
     clSetKernelArg(kernel, 2, sizeof(cl_int), &h);
     clSetKernelArg(kernel, 3, sizeof(cl_mem), &buffer);
-    size_t local_size[2] = { 256, 1 }; // размер work group
+    size_t local_size[2] = { 240, 1 }; // размер work group
     size_t global_size[2] = 
     {  // размер изображения, кратный размеру work group!!!
         align(w, local_size[0]), 
