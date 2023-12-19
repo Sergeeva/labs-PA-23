@@ -7,6 +7,7 @@
 #include <CL/cl.h>
 #include <libclew/ocl_init.h>
 #include <matrix.h>
+
 const int MATRIX_SIZE = 128;
 const int LOCAL_SIZE = 16;
 
