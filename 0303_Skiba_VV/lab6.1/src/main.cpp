@@ -2,20 +2,14 @@
 #include <libclew/ocl_init.h>
 
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <vector>
 #include <chrono>
 
+const int BLOCK_SIZE = 16;
+
 using namespace std;
 using namespace chrono;
-
-template<typename T>
-std::string to_string(T value) {
-    std::ostringstream ss;
-    ss << value;
-    return ss.str();
-}
 
 void reportError(cl_int err, const std::string &filename, int line) {
     if (CL_SUCCESS == err)
@@ -25,14 +19,11 @@ void reportError(cl_int err, const std::string &filename, int line) {
     throw std::runtime_error(message);
 }
 
-typedef unsigned char uchar;
-
 #define OCL_SAFE_CALL(expr) reportError(expr, __FILE__, __LINE__)
 
 #ifndef KERNEL_FILE_PATH
-#define KERNEL_FILE_PATH "mult.cl"
+#define KERNEL_FILE_PATH "m_mult.cl"
 #endif
-
 
 int main() {
     if (!ocl_init())
@@ -55,13 +46,13 @@ int main() {
         OCL_SAFE_CALL(clGetPlatformInfo(platform, CL_PLATFORM_NAME, 0, nullptr, &platformNameSize));// TODO 1.1
 
         std::vector<unsigned char> platformName(platformNameSize, 0);
-        
+
         OCL_SAFE_CALL(clGetPlatformInfo(platform, CL_PLATFORM_NAME, platformNameSize, platformName.data(), &platformNameSize));
         std::cout << "    Platform name: " << platformName.data() << std::endl;
 
         size_t platformVendorSize = 0;
-        OCL_SAFE_CALL(clGetPlatformInfo(platform, CL_PLATFORM_VENDOR, 0, nullptr, &platformVendorSize));        
-        
+        OCL_SAFE_CALL(clGetPlatformInfo(platform, CL_PLATFORM_VENDOR, 0, nullptr, &platformVendorSize));
+
         std::vector<unsigned char> platformVendor(platformVendorSize, 0);
 
         OCL_SAFE_CALL(clGetPlatformInfo(platform, CL_PLATFORM_VENDOR, platformVendorSize, platformVendor.data(), &platformVendorSize));
@@ -70,10 +61,10 @@ int main() {
         cl_uint devicesCount = 0;
         cl_uint num_entries = 0;
         OCL_SAFE_CALL(clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 0, nullptr, &devicesCount));
-        std::cout << "      Number of OpenCL dev-s: " << devicesCount << std::endl; 
+        std::cout << "      Number of OpenCL dev-s: " << devicesCount << std::endl;
         std::vector<cl_device_id> devices (devicesCount);
         OCL_SAFE_CALL(clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 1, devices.data(), &devicesCount));
-        
+
         for (int deviceIndex = 0; deviceIndex < devicesCount; ++deviceIndex) {
             std::cout << "    >> DEVICE #" << (deviceIndex + 1) << "/" << devicesCount << std::endl;
 
@@ -85,20 +76,20 @@ int main() {
             std::vector<unsigned char> dev_name (param_size, 0);
             OCL_SAFE_CALL(clGetDeviceInfo(device, CL_DEVICE_NAME, param_size, dev_name.data(), &param_size));
             std::cout << "    Device name: " << dev_name.data() << std::endl;
-            
+
             cl_device_type dev_type;
             OCL_SAFE_CALL(clGetDeviceInfo(device, CL_DEVICE_TYPE, sizeof(cl_device_type), &dev_type, &param_size));
             switch (dev_type)
             {
-            case CL_DEVICE_TYPE_CPU:
-                std::cout << "    Dev type :: CPU " << std::endl;
-                break;
-            case CL_DEVICE_TYPE_GPU:
-                std::cout << "    Dev type :: GPU " << std::endl;
-                break;
-            default:
-                std::cout << "    Dev type :: unknown " << std::endl;
-                break;
+                case CL_DEVICE_TYPE_CPU:
+                    std::cout << "    Dev type :: CPU " << std::endl;
+                    break;
+                case CL_DEVICE_TYPE_GPU:
+                    std::cout << "    Dev type :: GPU " << std::endl;
+                    break;
+                default:
+                    std::cout << "    Dev type :: unknown " << std::endl;
+                    break;
             }
 
             cl_ulong glob_mem_size; //bytes
@@ -130,19 +121,19 @@ int main() {
     OCL_SAFE_CALL(err);
     cout << "queue and context has been created" << endl;
 
-    int m, n, p;
-    cout << "Enter dimensions m, n, and p: ";
-    cin >> m >> n >> p;
+    int m;
+    cout << "Enter matrix size m: ";
+    cin >> m;
 
-    float *A = (float*)malloc(sizeof(float) * m * n);
-    float *B = (float*)malloc(sizeof(float) * n * p);
+    float *A = (float*)malloc(sizeof(float) * m * m);
+    float *B = (float*)malloc(sizeof(float) * m * m);
 
     // Populate A and B with random values
-    for (int i = 0; i < m * n; ++i) {
+    for (int i = 0; i < m * m; ++i) {
         A[i] = rand() / (float)RAND_MAX;
     }
 
-    for (int i = 0; i < n * p; ++i) {
+    for (int i = 0; i < m * m; ++i) {
         B[i] = rand() / (float)RAND_MAX;
     }
 
@@ -178,39 +169,39 @@ int main() {
     }
     free(source_str);
 
-    cl_mem bufA = clCreateBuffer(context, CL_MEM_READ_ONLY, m * n * sizeof(float), NULL, &err);
+    cl_mem bufA = clCreateBuffer(context, CL_MEM_READ_ONLY, m * m * sizeof(float), NULL, &err);
     OCL_SAFE_CALL(err);
-    cl_mem bufB = clCreateBuffer(context, CL_MEM_READ_ONLY, n * p * sizeof(float), NULL, &err);
+    cl_mem bufB = clCreateBuffer(context, CL_MEM_READ_ONLY, m * m * sizeof(float), NULL, &err);
     OCL_SAFE_CALL(err);
-    cl_mem bufC = clCreateBuffer(context, CL_MEM_WRITE_ONLY, m * p * sizeof(float), NULL, &err);
+    cl_mem bufC = clCreateBuffer(context, CL_MEM_WRITE_ONLY, m * m * sizeof(float), NULL, &err);
     OCL_SAFE_CALL(err);
 
-    clEnqueueWriteBuffer(queue, bufA, CL_TRUE, 0, m * n * sizeof(float), A, 0, NULL, NULL);
-    clEnqueueWriteBuffer(queue, bufB, CL_TRUE, 0, n * p * sizeof(float), B, 0, NULL, NULL);
+    clEnqueueWriteBuffer(queue, bufA, CL_TRUE, 0, m * m * sizeof(float), A, 0, NULL, NULL);
+    clEnqueueWriteBuffer(queue, bufB, CL_TRUE, 0, m * m * sizeof(float), B, 0, NULL, NULL);
 
     cl_kernel kernel = clCreateKernel(program, "matrix_multiply", &err);
     OCL_SAFE_CALL(err);
 
 
     // Set kernel arguments
-    err = clSetKernelArg(kernel, 0, sizeof(int), &m);
-    err |= clSetKernelArg(kernel, 1, sizeof(int), &n);
-    err |= clSetKernelArg(kernel, 2, sizeof(int), &p);
-    err |= clSetKernelArg(kernel, 3, sizeof(cl_mem), &bufA);
-    err |= clSetKernelArg(kernel, 4, sizeof(cl_mem), &bufB);
-    err |= clSetKernelArg(kernel, 5, sizeof(cl_mem), &bufC);
+    err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &bufA);
+    err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &bufB);
+    err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &bufC);
+    err |= clSetKernelArg(kernel, 3, sizeof(int), &m);
+    err |= clSetKernelArg(kernel, 4, sizeof(int), &BLOCK_SIZE);
     OCL_SAFE_CALL(err);
 
     cout << "Starting kernel..." << endl;
     auto start = high_resolution_clock::now();
 
 
-    size_t dims[2] = {(size_t)m, (size_t)p};
-    clEnqueueNDRangeKernel(queue, kernel, 2, NULL, dims, NULL, 0, NULL, NULL);
+    size_t local_dims[2] = {(size_t)BLOCK_SIZE, (size_t)BLOCK_SIZE};
+    size_t global_dims[2] = {(size_t)m, (size_t)m};
+    clEnqueueNDRangeKernel(queue, kernel, 2, NULL, global_dims, local_dims, 0, NULL, NULL);
     OCL_SAFE_CALL(err);
 
-    float *C = (float*)malloc(sizeof(float) * m * p);
-    clEnqueueReadBuffer(queue, bufC, CL_TRUE, 0, m * p * sizeof(float), C, 0, NULL, NULL);
+    float *C = (float*)malloc(sizeof(float) * m * m);
+    clEnqueueReadBuffer(queue, bufC, CL_TRUE, 0, m * m * sizeof(float), C, 0, NULL, NULL);
     OCL_SAFE_CALL(err);
     auto stop = high_resolution_clock::now();
     cout << "Kernel finished" << endl;
@@ -220,8 +211,8 @@ int main() {
 
     //calculate element [0][0] manually
     float sum = 0;
-    for (int i = 0; i < n; ++i) {
-        sum += A[i] * B[i * p];
+    for (int i = 0; i < m; ++i) {
+        sum += A[i] * B[i * m];
     }
     cout << "C[0][0] = " << C[0] << endl;
     cout << "sum = " << sum << endl;
